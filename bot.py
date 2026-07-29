@@ -41,9 +41,16 @@ def send_telegram(token):
     arrow    = "🟢" if change >= 0 else "🔴"
     link     = f"https://app.virtuals.io/virtuals/{token_id}"
 
-    creator_socials = ((token.get("creator") or {}).get("socials") or {})
-    twitter_link = (creator_socials.get("VERIFIED_LINKS") or {}).get("TWITTER")
+    # Le lien X et le site web peuvent se trouver soit sur le token lui-même,
+    # soit sur le créateur, selon ce qui a été rempli au moment du lancement.
+    token_links   = ((token.get("socials") or {}).get("VERIFIED_LINKS") or {})
+    creator_links = (((token.get("creator") or {}).get("socials") or {}).get("VERIFIED_LINKS") or {})
+
+    twitter_link = token_links.get("TWITTER") or creator_links.get("TWITTER")
+    website_link = token_links.get("WEBSITE") or creator_links.get("WEBSITE")
+
     x_line = f"🐦 X : <a href='{twitter_link}'>{twitter_link}</a>\n" if twitter_link else "🐦 X : Non renseigné\n"
+    web_line = f"🌐 Site : <a href='{website_link}'>{website_link}</a>\n" if website_link else "🌐 Site : Non renseigné\n"
 
     text = (
         f"🚨 <b>Nouveau token — seuil 5k$ atteint !</b>\n\n"
@@ -53,6 +60,7 @@ def send_telegram(token):
         f"💎 Market Cap : <b>{mcap:,.0f} VIRTUAL</b>\n"
         f"📅 Créé le : {created}\n"
         f"{x_line}"
+        f"{web_line}"
         f"🔗 <a href='{link}'>Voir sur Virtuals</a>"
     )
     if image:
