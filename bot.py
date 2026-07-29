@@ -24,7 +24,11 @@ def get_tokens():
     try:
         r = requests.get(API_URL, params=PARAMS, timeout=10)
         r.raise_for_status()
-        return r.json().get("data", [])
+        data = r.json().get("data", [])
+        if data:
+            import json
+            print("[DEBUG RAW TOKEN]", json.dumps(data[0], indent=2))
+        return data
     except Exception as e:
         print(f"[ERREUR API] {e}")
         return []
