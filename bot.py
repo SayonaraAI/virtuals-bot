@@ -24,11 +24,7 @@ def get_tokens():
     try:
         r = requests.get(API_URL, params=PARAMS, timeout=10)
         r.raise_for_status()
-        data = r.json().get("data", [])
-        if data:
-            import json
-            print("[DEBUG RAW TOKEN]", json.dumps(data[0], indent=2))
-        return data
+        return r.json().get("data", [])
     except Exception as e:
         print(f"[ERREUR API] {e}")
         return []
@@ -44,6 +40,11 @@ def send_telegram(token):
     created  = token.get("createdAt", "")[:10]
     arrow    = "🟢" if change >= 0 else "🔴"
     link     = f"https://app.virtuals.io/virtuals/{token_id}"
+
+    creator_socials = ((token.get("creator") or {}).get("socials") or {})
+    twitter_link = (creator_socials.get("VERIFIED_LINKS") or {}).get("TWITTER")
+    x_line = f"🐦 X : <a href='{twitter_link}'>{twitter_link}</a>\n" if twitter_link else "🐦 X : Non renseigné\n"
+
     text = (
         f"🚨 <b>Nouveau token — seuil 5k$ atteint !</b>\n\n"
         f"🪙 <b>{name}</b>  <code>${symbol}</code>\n"
@@ -51,6 +52,7 @@ def send_telegram(token):
         f"{arrow} Prix 24h : <b>{change:+.2f}%</b>\n"
         f"💎 Market Cap : <b>{mcap:,.0f} VIRTUAL</b>\n"
         f"📅 Créé le : {created}\n"
+        f"{x_line}"
         f"🔗 <a href='{link}'>Voir sur Virtuals</a>"
     )
     if image:
